@@ -59,6 +59,39 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 	json.NewDecoder(r.Body).Decode(&incamingdata)
 
+	// loading the data base
+
+	jsondata, _ := jsonreade()
+
+	userfound := false
+	passwordfund := false
+
+	// checking the user name is in data base or not
+
+	for _, user := range jsondata {
+
+		if user.UserName == incamingdata.Username {
+
+			userfound = true
+			if user.Password == incamingdata.Password {
+
+				passwordfund = true
+				break
+
+			}
+
+		}
+
+	}
+
+	if !userfound {
+		fmt.Fprintf(w, " user not found ")
+	} else if !passwordfund {
+		fmt.Fprintf(w, " passsowrd not found ")
+	} else {
+		fmt.Fprintf(w, " logig success ")
+	}
+
 	fmt.Printf(" %+v ", incamingdata)
 
 }
@@ -94,7 +127,7 @@ func forgetpass(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/forgetpass" {
 		fmt.Printf(" faild show forget passpage : %+v", http.StatusNotFound)
 		return
-	}else{
+	} else {
 
 		fmt.Fprintf(w, " \n Forgetpassrod gape is active :D \n")
 	}
