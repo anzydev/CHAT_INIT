@@ -40,6 +40,47 @@ func jsonreade() ([]user, error) {
 
 }
 
+// data save to the data base
+
+func jsondatasave(email string, username string, password string) ([]user, error) {
+
+	var jsondata []user
+	bytes, err := os.ReadFile("database.json")
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(bytes, &jsondata)
+	if err != nil {
+		return nil, err
+	}
+
+	// fmt.Printf("%+v",jsondata)
+
+	newuser := user{
+		Email:    email,
+		UserName: username,
+		Password: password,
+	}
+
+	jsondata = append(jsondata, newuser)
+
+	updateadata, err := json.MarshalIndent(jsondata, "", "\t")
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = os.WriteFile("database.json", updateadata, 0644)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return jsondata, nil
+
+}
+
 // the login funciton
 
 func login(w http.ResponseWriter, r *http.Request) {
@@ -115,6 +156,39 @@ func register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewDecoder(r.Body).Decode(&incamingdats)
+
+	user, _ := jsonreade()
+
+	for _, axistinguser := range user {
+
+		if axistinguser.UserName == incamingdats.Username {
+
+			fmt.Fprintf(w, " Username alrady exist ")
+			return
+		}
+		if axistinguser.Email == incamingdats.Email {
+			fmt.Fprintf(w, " email is alrady exist ")
+			return
+		}
+	}
+
+	validemail := true
+	otpone := true
+
+	if validemail {
+
+		if otpone {
+
+			_, err := jsondatasave( incamingdats.Email , incamingdats.Username , incamingdats.Password )
+
+			if err != nil {
+
+				fmt.Printf("error : ", err)
+			}
+
+		}
+
+	}
 
 	fmt.Printf(" %+v ", incamingdats)
 

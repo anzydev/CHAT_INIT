@@ -111,8 +111,8 @@ func forgetpass(url string, email string) {
 
 func main() {
 
-	login("http://localhost:4040/login", "mikey", "middkey")
-	// register("http://localhost:4040/signup", "mda2343@gmail.com", "draken", "paf32453")
+	login("http://localhost:4040/login", "mikey", "mikey")
+	register("http://localhost:4040/signup", "mda234343@gmail.com", "dra34ken", "paf32453")
 	// forgetpass("http://localhost:4040/forgetpass", "mda35345345@gmail.com")
 
 }
