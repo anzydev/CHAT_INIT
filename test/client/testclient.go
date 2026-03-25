@@ -25,6 +25,7 @@ func main333() {
 
 	// 3. Dial the Server
 	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
+	
 	if err != nil {
 		log.Fatal("Handshake Failed! Did you start the server? Error:", err)
 	}

@@ -1,15 +1,28 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
+	"strings"
+
 	// "encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+
 	// "golang.org/x/tools/go/analysis/checker"
+
+	"github.com/gorilla/websocket"
+	"github.com/joho/godotenv"
 	// "net/url"
 	// "net/http"
+)
+
+var (
+	mytoken string
+	myuser  string
 )
 
 // this is login function it do post login info in a url in json form package
@@ -40,7 +53,15 @@ func login(url string, username string, password string) {
 	bodybytes, _ := io.ReadAll(resp.Body)
 	massage := string(bodybytes)
 
-	fmt.Printf(massage)
+	parts := strings.Split(massage, ":")
+
+	if len(parts) > 0 && parts[0] == "success" {
+
+		savecradenshial(username, parts[2])
+		mytoken = parts[2]
+
+		fmt.Printf(" \n successfully login \n")
+	}
 
 }
 
@@ -117,7 +138,15 @@ func register(url string, email string, username string, password string) {
 	defer resp.Body.Close()
 
 	newbystes, _ := io.ReadAll(resp.Body)
-	fmt.Printf("\n [SERVER RESPONSE]: %s\n", string(newbystes))
+	servermessage := string(newbystes)
+
+	partsmessge := strings.Split(servermessage, ":")
+
+	if len(partsmessge) > 0 && partsmessge[0] == "success" {
+		fmt.Printf("\n login successfully \n")
+		savecradenshial(username, partsmessge[2])
+		mytoken = partsmessge[2]
+	}
 
 }
 
@@ -153,10 +182,94 @@ func forgetpass(url string, email string) {
 
 }
 
-func main() {
+func savecradenshial(username string, tokeen string) {
 
-	login("http://localhost:4040/login", "dra34ken", "paf32453")
-	// emailcheck("http://localhost:4040/signup", "uimikey78@gmail.com", "dra34ken", "paf32453")
+	contents := fmt.Sprintf("user=%s\ntoken=%s", username, tokeen)
+
+	err := os.WriteFile(".env", []byte(contents), 0644)
+
+	if err != nil {
+		fmt.Printf("\n faild to save the credential : %s", err)
+	}
+	fmt.Printf("\n successflyy cradentional saved \n")
+
+}
+
+func chate(tusr string, token string, user string) {
+
+	url := fmt.Sprintf("ws://localhost:4040/chat?user=%s&token=%s", user, token)
+
+	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
+
+	if err != nil {
+		fmt.Printf("\n handshake faild \n : %s", &err)
+		return
+	}
+
+	defer conn.Close()
+
+	fmt.Printf("\n We are in Cannected to the server \n")
+
+	go func() {
+
+		for {
+
+			_, p, err := conn.ReadMessage()
+
+			if err != nil {
+				fmt.Printf("\n Faild to resive message : %s ", &err)
+				return
+			}
+
+			fmt.Println(string(p))
+
+		}
+
+	}()
+
+	scanner := bufio.NewScanner(os.Stdin)
+
+	for {
+
+		if scanner.Scan() {
+			fmt.Printf("\n > ")
+			text := scanner.Text()
+
+			if text == "" {
+				continue
+			}
+
+			msg := fmt.Sprintf("tusr:%s:user:%s", tusr, text)
+			err := conn.WriteMessage(websocket.TextMessage, []byte(msg))
+
+			if err != nil {
+				fmt.Printf("\n %s ", &err)
+				break
+			}
+
+		}
+	}
+
+}
+
+func main() {
+	err := godotenv.Load(".env")
+	if err != nil {
+		fmt.Printf("%s", err)
+	}
+
+	mytoken = os.Getenv("token")
+	myuser = os.Getenv("user")
+
+	// login("http://localhost:4040/login", "dra34ken", "paf32453")
+	login("http://localhost:4040/login", "mikey2", "paf32453")
+
+	// emailcheck("http://localhost:4040/signup", "mda891526@gmail.com", "mikey2", "paf32453")
+
+	tosend := "dra34ken"
+
+	chate(tosend, mytoken, myuser)
+
 	// forgetpass("http://localhost:4040/forgetpass", "mda35345345@gmail.com")
 
 }
