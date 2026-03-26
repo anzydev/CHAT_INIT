@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"strings"
 
+	// "time"
+
 	// "encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -29,6 +31,8 @@ var (
 
 func login(url string, username string, password string) {
 
+	url = fmt.Sprintf("%s/login", string(url))
+
 	data := map[string]string{
 
 		"username": username,
@@ -36,16 +40,15 @@ func login(url string, username string, password string) {
 	}
 
 	jsondata, _ := json.Marshal(data)
-
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsondata))
 
 	if err != nil {
 
-		fmt.Printf("\n Faild to sent post req : ", err)
+		fmt.Printf("\n Faild to sent post req : %v ", err)
 		return
 	} else {
 
-		fmt.Printf(" \n sucessfully sented : ", resp.Status)
+		fmt.Printf(" \n sucessfully sented : %v ", resp.Status)
 	}
 
 	defer resp.Body.Close()
@@ -69,6 +72,8 @@ func login(url string, username string, password string) {
 
 func emailcheck(url string, email string, username string, password string) {
 
+	urle := fmt.Sprintf("%s/signup", url)
+
 	data := map[string]string{
 
 		"email":    email,
@@ -78,17 +83,17 @@ func emailcheck(url string, email string, username string, password string) {
 	jsondata, err := json.Marshal(data)
 	if err != nil {
 
-		fmt.Printf(" \n faild to marshel json data : ", err)
+		fmt.Printf(" \n faild to marshel json data : %v ", err)
 		return
 	}
-	resp, err := http.Post(url, "application/json-data", bytes.NewBuffer(jsondata))
+	resp, err := http.Post(urle, "application/json-data", bytes.NewBuffer(jsondata))
 
 	if err != nil {
-		fmt.Printf(" \n failt to post register info : ", err)
+		fmt.Printf(" \n failt to post register info : %v ", err)
 		return
 	} else {
 
-		fmt.Printf(" \n successfuly posted register data : ", err)
+		fmt.Printf(" \n successfuly posted register data : %v ", err)
 
 	}
 
@@ -99,12 +104,14 @@ func emailcheck(url string, email string, username string, password string) {
 	massage := string(newbytes)
 
 	if massage == "success" {
-		register("http://localhost:4040/confarmregister", email, username, password)
+		register(url, email, username, password)
 	}
 
 }
 
 func register(url string, email string, username string, password string) {
+
+	url = fmt.Sprintf("%s/confarmregister", url)
 
 	var userinput string
 	fmt.Printf(" \n Enter the otp : ")
@@ -121,17 +128,17 @@ func register(url string, email string, username string, password string) {
 	jsondata, err := json.Marshal(data)
 	if err != nil {
 
-		fmt.Printf(" \n faild to marshel json data : ", err)
+		fmt.Printf(" \n faild to marshel json data : %v ", err)
 		return
 	}
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsondata))
 
 	if err != nil {
-		fmt.Printf(" \n failt to post register info : ", err)
+		fmt.Printf(" \n failt to post register info : %v ", err)
 		return
 	} else {
 
-		fmt.Printf(" \n successfuly posted register data : ", err)
+		fmt.Printf(" \n successfuly posted register data : %v ", err)
 
 	}
 
@@ -152,34 +159,45 @@ func register(url string, email string, username string, password string) {
 
 // forget password
 
-func forgetpass(url string, email string) {
+func forgetpass(baseURL string, email string) {
+	// 1. REQUEST THE OTP
+	url := fmt.Sprintf("%s/forgetpass", baseURL)
+	data := map[string]string{"email": email}
+	jsondata, _ := json.Marshal(data)
 
-	data := map[string]string{
-
-		"email": email,
-	}
-
-	jsondata, err := json.Marshal(data)
-
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsondata))
 	if err != nil {
-
-		fmt.Printf(" \n faild to marshal json data : %+s ", err)
 		return
 	}
-
-	resp, err := http.Post(url, "/application/paasforget", bytes.NewBuffer(jsondata))
-
-	if err != nil {
-
-		fmt.Printf(" \n failt to sent the email to server : %+s ", err)
-		return
-	} else {
-		fmt.Printf(" \n success fully sented forget password email : %+s", resp.Status)
-
-	}
-
 	defer resp.Body.Close()
 
+	body, _ := io.ReadAll(resp.Body)
+	parts := strings.Split(string(body), ":")
+
+	if parts[0] == "done" {
+		fmt.Printf("\n %s", parts[1])
+
+		var otpInput string
+		var newPassInput string
+		fmt.Printf("\n Enter OTP: ")
+		fmt.Scan(&otpInput)
+		fmt.Printf("\n Enter New Password: ")
+		fmt.Scan(&newPassInput)
+
+		// 2. SEND OTP AND PASSWORD BACK
+		// We use the same URL but add ?otp=...&user=...&new=...
+		resetURL := fmt.Sprintf("%s/forgetpass?otp=%s&user=%s&new=%s", baseURL, otpInput, email, newPassInput)
+
+		// We send nil for the body because the data is in the URL now
+		resp2, err := http.Post(resetURL, "application/json", nil)
+		if err != nil {
+			return
+		}
+		defer resp2.Body.Close()
+
+		finalBody, _ := io.ReadAll(resp2.Body)
+		fmt.Printf("\n Final Result: %s", string(finalBody))
+	}
 }
 
 func savecradenshial(username string, tokeen string) {
@@ -189,7 +207,7 @@ func savecradenshial(username string, tokeen string) {
 	err := os.WriteFile(".env", []byte(contents), 0644)
 
 	if err != nil {
-		fmt.Printf("\n faild to save the credential : %s", err)
+		fmt.Printf("\n faild to save the credential : %v", err)
 	}
 	fmt.Printf("\n successflyy cradentional saved \n")
 
@@ -202,7 +220,7 @@ func chate(tusr string, token string, user string) {
 	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
 
 	if err != nil {
-		fmt.Printf("\n handshake faild \n : %s", &err)
+		fmt.Printf("\n handshake faild \n : %v", err)
 		return
 	}
 
@@ -217,7 +235,7 @@ func chate(tusr string, token string, user string) {
 			_, p, err := conn.ReadMessage()
 
 			if err != nil {
-				fmt.Printf("\n Faild to resive message : %s ", &err)
+				fmt.Printf("\n Faild to resive message : %v ", err)
 				return
 			}
 
@@ -232,7 +250,7 @@ func chate(tusr string, token string, user string) {
 	for {
 
 		if scanner.Scan() {
-			fmt.Printf("\n > ")
+			fmt.Printf(" TO --> %s \n > ", tusr)
 			text := scanner.Text()
 
 			if text == "" {
@@ -243,7 +261,7 @@ func chate(tusr string, token string, user string) {
 			err := conn.WriteMessage(websocket.TextMessage, []byte(msg))
 
 			if err != nil {
-				fmt.Printf("\n %s ", &err)
+				fmt.Printf("\n %v ", err)
 				break
 			}
 
@@ -252,24 +270,137 @@ func chate(tusr string, token string, user string) {
 
 }
 
+// ACtions SRQ for sentfriend req RFQ for refect friend req AFQ for accept firend req
+// DLF for delate form friend
+func todo(url, token string, user string, action string, targetuser string) {
+
+	var act string
+
+	switch action {
+
+	case "SRQ":
+		act = "sentfreq"
+	case "RFQ":
+		act = "rejectfreq"
+	case "AFQ":
+		act = "acceptfreq"
+	case "DLF":
+		act = "delatfre"
+
+	}
+
+	Url := fmt.Sprintf("%s/do?user=%s&token=%s&act=%s&tar=%s", url, user, token, act, targetuser)
+
+	resp, err := http.Post(Url, "application/json", nil)
+
+	if err != nil {
+		fmt.Printf("\n Failed to send friend request: %v", err)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK {
+		fmt.Printf("\n Successfully action sented to %s!", targetuser)
+	} else {
+		fmt.Printf("\n Server returned error: %s", resp.Status)
+	}
+
+	rebytes, _ := io.ReadAll(resp.Body)
+
+	message := string(rebytes)
+
+	fmt.Printf(" \n %v  \n", message)
+}
+
+// func rejectfreindreq(url, token string, user string) {
+
+// 	act := "rejectfreq"
+// 	Url := fmt.Sprintf("%s/do?user=%s&token=%s&act=%s", url, user, token, act)
+
+// 	resp, err := http.Post(Url, "application/json", nil)
+
+// 	if err != nil {
+// 		fmt.Printf("\n Failed to send friend request: %v", err)
+// 		return
+// 	}
+
+// 	defer resp.Body.Close()
+
+// 	if resp.StatusCode == http.StatusOK {
+// 		fmt.Printf("\n Friend request sent to %s!", user)
+// 	} else {
+// 		fmt.Printf("\n Server returned error: %s", resp.Status)
+// 	}
+// }
+
+// func acceptfreindreq(url, token string, user string) {
+
+// 	act := "acceptfreq"
+// 	Url := fmt.Sprintf("%s/do?user=%s&token=%s&act=%s", url, user, token, act)
+
+// 	resp, err := http.Post(Url, "application/json", nil)
+
+// 	if err != nil {
+// 		fmt.Printf("\n Failed to send friend request: %v", err)
+// 		return
+// 	}
+
+// 	defer resp.Body.Close()
+
+// 	if resp.StatusCode == http.StatusOK {
+// 		fmt.Printf("\n Friend request sent to %s!", user)
+// 	} else {
+// 		fmt.Printf("\n Server returned error: %s", resp.Status)
+// 	}
+// }
+
+// func delatefreind(url, token string, user string) {
+
+// 	act := "delatfre"
+// 	Url := fmt.Sprintf("%s/do?user=%s&token=%s&act=%s", url, user, token, act)
+
+// 	resp, err := http.Post(Url, "application/json", nil)
+
+// 	if err != nil {
+// 		fmt.Printf("\n Failed to send friend request: %v", err)
+// 		return
+// 	}
+
+// 	defer resp.Body.Close()
+
+// 	if resp.StatusCode == http.StatusOK {
+// 		fmt.Printf("\n Friend request sent to %s!", user)
+// 	} else {
+// 		fmt.Printf("\n Server returned error: %s", resp.Status)
+// 	}
+// }
+
 func main() {
+
+	url := "http://localhost"
+	port := ":4040"
+
+	url = fmt.Sprintf("%v%v", url, port)
+
 	err := godotenv.Load(".env")
 	if err != nil {
-		fmt.Printf("%s", err)
+		fmt.Printf("%v ", err)
 	}
 
 	mytoken = os.Getenv("token")
 	myuser = os.Getenv("user")
 
 	// login("http://localhost:4040/login", "dra34ken", "paf32453")
-	login("http://localhost:4040/login", "mikey2", "paf32453")
+	// login(url, "mikey2", "paf32453")
 
-	// emailcheck("http://localhost:4040/signup", "mda891526@gmail.com", "mikey2", "paf32453")
+	// emailcheck(url, "mda891526@gmail.com", "mikey2", "paf32453")
 
-	tosend := "dra34ken"
+	todo(url, mytoken, myuser, "SRQ", "dra34ken")
+	// tosend := "dra34ken"
 
-	chate(tosend, mytoken, myuser)
+	// // chate(tosend, mytoken, myuser)
 
-	// forgetpass("http://localhost:4040/forgetpass", "mda35345345@gmail.com")
+	// forgetpass(url, "mda891526@gmail.com")
 
 }
