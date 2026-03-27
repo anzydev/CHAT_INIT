@@ -180,14 +180,16 @@ func emailcheck(url string, email string, username string, password string) bool
 	massage := string(newbytes)
 
 	if massage == "success" {
-		register(url, email, username, password)
-		return true
+		if register(url, email, username, password){
+
+			return true
+		}
 	}
 
 	return false
 }
 
-func register(url string, email string, username string, password string) {
+func register(url string, email string, username string, password string) bool {
 
 	url = fmt.Sprintf("%s/confarmregister", url)
 
@@ -209,7 +211,7 @@ func register(url string, email string, username string, password string) {
 		msg := fmt.Sprintf("\n Faild to Marshel json data : %v ", err)
 		fmt.Print(Redtext.Render(msg))
 
-		return
+		return false
 	}
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsondata))
 
@@ -218,11 +220,12 @@ func register(url string, email string, username string, password string) {
 		msg := fmt.Sprintf("\n Faild to Post Register info : %v ", err)
 		fmt.Print(Redtext.Render(msg))
 
-		return
+		return false
 	} else {
 
 		msg := fmt.Sprintf("\n Successfully Posted the Register data : %v ", resp.Status)
 		fmt.Print(greentext.Render(msg))
+		
 
 	}
 
@@ -237,8 +240,10 @@ func register(url string, email string, username string, password string) {
 		fmt.Print(greentext.Render("\n login successfully \n"))
 		savecradenshial(username, partsmessge[2])
 		mytoken = partsmessge[2]
+		return true
 	}
 
+	return false
 }
 
 // forget password
@@ -721,6 +726,10 @@ func freindsetting() {
 
 func tokenchekcing(url string) bool {
 
+	if mytoken == "" || myuser == "" {
+		return false
+	}
+
 	url = fmt.Sprintf("%v/checking?token=%s", url, mytoken)
 
 	resp, _ := http.Post(url, "application/checking", nil)
@@ -823,7 +832,7 @@ func manue(url string) {
 					password := getPassword()
 					email := getEmail()
 					if emailcheck(url, email, username, password) {
-						
+
 						DM(url)
 						return
 					} else {
