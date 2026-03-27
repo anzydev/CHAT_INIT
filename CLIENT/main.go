@@ -180,7 +180,7 @@ func emailcheck(url string, email string, username string, password string) bool
 	massage := string(newbytes)
 
 	if massage == "success" {
-		if register(url, email, username, password){
+		if register(url, email, username, password) {
 
 			return true
 		}
@@ -225,7 +225,6 @@ func register(url string, email string, username string, password string) bool {
 
 		msg := fmt.Sprintf("\n Successfully Posted the Register data : %v ", resp.Status)
 		fmt.Print(greentext.Render(msg))
-		
 
 	}
 
@@ -335,7 +334,7 @@ func chate(tusr string, token string, user string) {
 				return
 			}
 
-			fmt.Println(string(p))
+			fmt.Println(Redtext.Render(string(p)))
 
 		}
 

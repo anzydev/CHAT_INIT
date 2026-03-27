@@ -15,7 +15,8 @@
 		"token": "ZHJhMzRrZW46dWltaWtleTc4QGdtYWlsLmNvbTpTai9PdmdZTy5h",
 		"passowrd": "$2a$10$pOv1GRDs2Q04luRVskN.kOeENwkyStoYuyyBbgrsWOWSj/OvgYO.a",
 		"friendlist": [
-			"mikey2"
+			"mikey2",
+			"hmm"
 		],
 		"reqestlist": [
 			"mikey3",
@@ -36,5 +37,15 @@
 			"Pintu",
 			"Taplu"
 		]
+	},
+	{
+		"username": "hmm",
+		"email": "bowiwi3017@fabaos.com",
+		"token": "aG1tOmJvd2l3aTMwMTdAZmFiYW9zLmNvbTowZWFjTmpsQktT",
+		"passowrd": "$2a$10$0GRzU8fSvrhvmVYOvK07cuXhasZp3WY5zYNcM9C0PhB0eacNjlBKS",
+		"friendlist": [
+			"dra34ken"
+		],
+		"reqestlist": []
 	}
 ]
