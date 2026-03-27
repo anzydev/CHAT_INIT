@@ -128,6 +128,7 @@ func login(url string, username string, password string) bool {
 
 		savecradenshial(username, parts[2])
 		mytoken = parts[2]
+		myuser = username
 
 		return true
 	}
@@ -534,73 +535,78 @@ func getEmail() string {
 var flist []string
 
 func DM(url string) {
+	if mytoken != "" && myuser != "" {
+		for {
+			cls()
+			showBigModernLogo()
+			flist = viewflist(url)
 
-	for {
-		cls()
-		showBigModernLogo()
-		flist = viewflist(url)
+			title := "           Direct Message        \n"
+			footer := fmt.Sprintf("\n          Chouse Numbers to msg them <3      \n %v ", purpultext.Render("  0. Exit   111. Friend Manage "))
 
-		title := "           Direct Message        \n"
-		footer := fmt.Sprintf("\n          Chouse Numbers to msg them <3      \n %v ", purpultext.Render("  0. Exit   111. Friend Manage "))
+			var list string
 
-		var list string
+			if len(flist) > 0 {
 
-		if len(flist) > 0 {
+				for i := range flist {
 
-			for i := range flist {
+					list += fmt.Sprintf(" %v • %v\n", i+1, flist[i])
 
-				list += fmt.Sprintf(" %v • %v\n", i+1, flist[i])
-
-			}
-
-		} else {
-
-			fmt.Println(texts.Render(title + " No friend in this New World  "))
-		}
-
-		fmt.Println(texts.Render(title + wboldtext.Render(list) + footer))
-
-		scanner := bufio.NewScanner(os.Stdin)
-
-		fmt.Printf("%v", arrowStyle)
-
-		if scanner.Scan() {
-
-			cleanText := strings.TrimSpace(scanner.Text())
-			choice, err := strconv.Atoi(cleanText)
-
-			if err != nil {
-				fmt.Printf("\n ❌ That's not a number, %v \n", myuser)
-				time.Sleep(1 * time.Second)
-				continue
-			}
-
-			if choice == 0 {
-				return
-			}
-			if choice == 111 {
-				freindsetting()
-				return
-			}
-
-			if choice > 0 && choice <= len(flist) {
-
-				targeteruser := flist[choice-1]
-
-				cls()
-				chate(targeteruser, mytoken, myuser)
-
-				break
+				}
 
 			} else {
-				fmt.Println("❌ Invalid friend number!")
-				time.Sleep(1 * time.Second)
-				continue
+
+				fmt.Println(texts.Render(title + " No friend in this New World  "))
+			}
+
+			fmt.Println(texts.Render(title + wboldtext.Render(list) + footer))
+
+			scanner := bufio.NewScanner(os.Stdin)
+
+			fmt.Printf("%v", arrowStyle)
+
+			if scanner.Scan() {
+
+				cleanText := strings.TrimSpace(scanner.Text())
+				choice, err := strconv.Atoi(cleanText)
+
+				if err != nil {
+					fmt.Printf("\n ❌ That's not a number, %v \n", myuser)
+					time.Sleep(1 * time.Second)
+					continue
+				}
+
+				if choice == 0 {
+					return
+				}
+				if choice == 111 {
+					freindsetting()
+					return
+				}
+
+				if choice > 0 && choice <= len(flist) {
+
+					targeteruser := flist[choice-1]
+
+					cls()
+					chate(targeteruser, mytoken, myuser)
+
+					break
+
+				} else {
+					fmt.Println("❌ Invalid friend number!")
+					time.Sleep(1 * time.Second)
+					continue
+
+				}
 
 			}
 
 		}
+	} else {
 
+		manue(baseURL)
+		return
 	}
 
 }
@@ -784,122 +790,94 @@ func viewReqlist(url string) []string {
 	return Rlist
 }
 
-func manue(url string, user string, token string) {
+func manue(url string) {
 	for {
+
+		cls()
 		showBigModernLogo()
 
-		istokenvalid := tokenchekcing(url)
-
-		if token != "" && user != "" {
-			DM(url)
-			break
-		}
-
-		if !istokenvalid {
-
-			isbreak := false
+		// If globals are empty, we go straight to Login/Register
+		if mytoken == "" || myuser == "" {
 			fmt.Println(headerStyle.Render(" WELCOME TO CHAT-INIT "))
-			fmt.Println(texts.Render(" CHOUSE OPTION 0-3   \n 1. Login  \n 2. Register \n 3. Forget-password   \n 0. Exit "))
+			fmt.Println(texts.Render(" CHOOSE OPTION 0-3   \n 1. Login  \n 2. Register \n 3. Forget-password   \n 0. Exit "))
 
 			userinput := bufio.NewScanner(os.Stdin)
-
 			fmt.Printf("%v", cynetext.Render("  > "))
 
 			if userinput.Scan() {
-				text := userinput.Text()
+				text := strings.TrimSpace(userinput.Text())
 				switch text {
-
 				case "1":
-
 					username := getUsername()
 					password := getPassword()
-
-					idone := login(url, username, password)
-
-					if idone {
-
+					if login(url, username, password) {
 						DM(url)
-						isbreak = true
-
-					} else if !idone {
-						fmt.Print(Redtext.Render("Faild to login Try again !"))
-
+						return
+					} else {
+						fmt.Println(Redtext.Render("\n Failed to login. Try again!"))
+						time.Sleep(1 * time.Second)
 					}
 
 				case "2":
-
 					username := getUsername()
 					password := getPassword()
 					email := getEmail()
-					Isonehh := emailcheck(baseURL, email, username, password)
-
-					if Isonehh {
-
+					if emailcheck(url, email, username, password) {
+						
 						DM(url)
-						isbreak = true
-
-					} else if !Isonehh {
-
-						fmt.Print(Redtext.Render(" \n Faild to Register "))
+						return
+					} else {
+						fmt.Println(Redtext.Render("\n Failed to Register"))
+						time.Sleep(1 * time.Second)
 					}
 
 				case "3":
-
-					Email := getEmail()
-
-					isdone := forgetpass(baseURL, Email)
-
-					if isdone {
-
-						fmt.Print(greentext.Render(" \n Successfully Password Reset Login Now "))
+					email := getEmail()
+					if forgetpass(url, email) {
+						fmt.Println(greentext.Render("\n Password Reset! Login Now"))
 						time.Sleep(2 * time.Second)
-						continue
-
-					} else if !isdone {
-
-						fmt.Print(Redtext.Render(" \n Faild to Reset Password try again "))
 					}
 
 				case "0":
 					cls()
-					fmt.Printf("\n Bye Bye Have a Gud Day <3  ;) ")
-					isbreak = true
+					fmt.Println("Bye Bye! Have a Good Day <3")
+					os.Exit(0)
 
 				default:
-					fmt.Println(" Invalid ")
+					fmt.Println("Invalid Option")
+					time.Sleep(1 * time.Second)
 				}
-
-				time.Sleep(50 * time.Millisecond)
-
 			}
-
-			if isbreak {
-				break
+		} else {
+			// We have a token saved; check if it's still good on the server
+			if tokenchekcing(url) {
+				DM(url)
+				return
+			} else {
+				// Server rejected the token (Session expired or bad data)
+				fmt.Println(Redtext.Render("! Session expired. Clearing credentials..."))
+				mytoken = ""
+				myuser = ""
+				os.Remove(".env")
+				time.Sleep(1 * time.Second)
+				continue
 			}
-
 		}
 	}
-	fmt.Println()
 }
 
 var Reqlist []string
 
 func main() {
 
-	url := "http://localhost"
-	port := ":4040"
-	baseURL = fmt.Sprintf("%v%v", url, port)
+	baseURL = "http://localhost:4040"
 
-	url = fmt.Sprintf("%v%v", url, port)
-
-	err := godotenv.Load(".env")
-	if err != nil {
-		fmt.Printf("%v ", err)
-	}
+	// Try to load. If it fails (file deleted), mytoken/myuser will stay empty ""
+	godotenv.Load(".env")
 
 	mytoken = os.Getenv("token")
 	myuser = os.Getenv("user")
 
-	manue(url, myuser, mytoken)
-
+	// Start the menu
+	manue(baseURL)
 }
